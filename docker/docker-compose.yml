@@ -1,0 +1,31 @@
+version: "3"
+services:
+  influxdb:
+    image: influxdb:1.7.10-alpine
+    command: 
+      - -config 
+      - /tmp/influxdb.conf
+    volumes:
+      - influxdb:/var/lib/influxdb
+      - ./influxdb/influxdb.conf:/tmp/influxdb.conf:ro
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - ./grafana/defaults.ini:/etc/grafana/grafana.ini
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/default_dashboard.json:/opt/dashboards/default_dashboard.json
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/houseboat.yaml
+      - grafana:/var/lib/grafana
+    ports:
+      - 3000:3000
+  collector:
+    image: houseboat:collector-1.0
+    build:
+      context: ../
+      dockerfile: docker/collector/Dockerfile
+    environment:
+      - INFLUX_DB_HOST=influxdb
+
+volumes:
+  grafana:
+  influxdb:
